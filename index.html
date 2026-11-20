@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gleam Production</title>
+<style>
+:root{--bg:#0b0b0c;--fg:#f4f2ee;--mute:#8b8985;--dim:#34343a;--card:#17171a;--line:#26262b;--acc:#ff5a2c;--glass:rgba(20,20,22,.55);color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4f2ee;--fg:#121214;--mute:#77746e;--dim:#cfcbc3;--card:#e9e6df;--line:#d9d5cc;--glass:rgba(244,242,238,.65);color-scheme:light}}
+:root[data-theme="light"]{--bg:#f4f2ee;--fg:#121214;--mute:#77746e;--dim:#cfcbc3;--card:#e9e6df;--line:#d9d5cc;--glass:rgba(244,242,238,.65);color-scheme:light}
+html{scroll-behavior:smooth;scroll-padding-top:calc(72px + env(safe-area-inset-top,0px))}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 "Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .4s,color .4s}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:pointer}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.wrap{padding:0 16px}
+/* header */
+header{position:fixed;z-index:60;top:0;left:0;right:0;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;justify-content:space-between;align-items:center;background:var(--glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:600}
+.logo i{width:22px;height:22px;border-radius:6px;background:conic-gradient(from 30deg,var(--acc),#7a1e12,var(--acc))}
+.ic{display:flex;gap:6px}
+.ib{width:36px;height:36px;border-radius:50%;border:0;background:none;display:grid;place-items:center;transition:background .2s}
+.ib:hover{background:var(--card)}
+.ib svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7}
+/* menu overlay */
+#menu{position:fixed;inset:0;z-index:55;background:var(--bg);padding:calc(90px + env(safe-area-inset-top,0px)) 24px 32px;display:flex;flex-direction:column;justify-content:space-between;transform:translateY(-100%);transition:transform .7s cubic-bezier(.76,0,.24,1)}
+body.mo #menu{transform:none}
+#menu nav{display:flex;flex-direction:column;gap:4px}
+#menu nav a{font-size:clamp(40px,12vw,84px);letter-spacing:-.04em;line-height:1.05;opacity:.9}
+/* hero */
+.hero{padding-top:calc(72px + env(safe-area-inset-top,0px))}
+.hc{position:relative;height:min(78svh,620px);border-radius:24px;overflow:hidden;color:#fff;padding:16px;display:flex;flex-direction:column;justify-content:space-between;background:radial-gradient(34% 22% at 50% 24%,#150605 0 70%,transparent 72%),radial-gradient(70% 60% at 50% 42%,#ff8a3a,#d2301c 55%,#3a0a0a)}
+.hc .row{display:flex;justify-content:space-between;opacity:.85}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.tag{padding:8px 14px;border-radius:999px;background:rgba(0,0,0,.28);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);font-size:12px;border:1px solid rgba(255,255,255,.18);transition:background .2s,transform .3s}
+.tag:hover{background:rgba(255,255,255,.22);transform:translateY(-2px)}
+.trust{display:flex;align-items:center;gap:10px;font-size:12px}
+.av{display:flex}.av b{width:26px;height:26px;border-radius:50%;border:2px solid #2a0d0b;margin-left:-8px}.av b:first-child{margin-left:0}
+h1.t{font-size:clamp(40px,12.5vw,150px);line-height:.95;letter-spacing:-.055em;font-weight:600;margin:28px 0 14px;text-align:center}
+.meta{display:flex;justify-content:space-between;color:var(--mute)}
+.meta span{border-bottom:1px solid var(--mute);padding-bottom:2px}
+/* sections */
+section{padding:72px 16px 0}
+.lab{display:flex;justify-content:space-between;color:var(--mute);margin-bottom:16px}
+.big{font-size:clamp(30px,8.5vw,80px);line-height:1.05;letter-spacing:-.045em;font-weight:500}
+.fill span{color:var(--dim);transition:color .35s}
+.fill span.on{color:var(--fg)}
+.btns{display:flex;gap:8px;margin-top:28px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 20px;border-radius:999px;background:var(--card);border:1px solid var(--line);transition:background .25s,color .25s}
+.btn:hover{background:var(--fg);color:var(--bg)}
+.btn.sq{padding:14px 16px}
+.img{position:relative;border-radius:24px;overflow:hidden;aspect-ratio:3/4;margin-top:40px}
+.img .bd{position:absolute;right:12px;bottom:12px;display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:14px;background:var(--glass);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-size:12px;color:var(--fg)}
+.dot{width:9px;height:9px;border-radius:50%;background:#3ddc84;box-shadow:0 0 0 4px rgba(61,220,132,.25)}
+.lst{list-style:none;margin-top:24px;display:flex;flex-direction:column;gap:10px}
+.lst li{display:flex;gap:12px;align-items:center}.lst i{font-style:normal;font-size:20px;color:var(--mute)}
+/* form */
+.fm{margin-top:56px}
+.fm h3{font-size:15px;font-weight:500;margin-bottom:18px}
+.fm input,.fm textarea{width:100%;background:none;border:0;border-bottom:1px solid var(--line);color:var(--fg);font:inherit;padding:14px 0;outline:none;transition:border-color .25s;resize:none}
+.fm input:focus,.fm textarea:focus{border-color:var(--fg)}
+.fm .btn{margin-top:22px}
+/* stats */
+.st{margin-top:64px;display:flex;flex-direction:column;gap:28px}
+.st b{display:block;font-size:clamp(56px,16vw,120px);line-height:1;letter-spacing:-.05em;font-weight:500;font-variant-numeric:tabular-nums}
+.st span{color:var(--mute);font-size:13px}
+/* marquee */
+.mqw{overflow:hidden;margin-top:36px}
+.mq{display:flex;gap:12px;width:max-content;animation:mq 24s linear infinite}
+.mq div{width:150px;height:104px;border-radius:20px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;font-weight:600}
+@keyframes mq{to{transform:translateX(calc(-50% - 6px))}}
+/* work stack */
+.stack{margin-top:36px;perspective:1400px}
+.sp{position:sticky;top:calc(76px + var(--i)*14px);height:64vh;margin-bottom:6vh}
+.sc{height:100%;border-radius:24px;position:relative;overflow:hidden;transform-origin:50% 0;will-change:transform,filter;box-shadow:0 -10px 36px rgba(0,0,0,.35);color:#fff}
+.sc .fc{position:absolute;top:14px;right:14px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.4);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.sc .nm{position:absolute;left:12px;right:12px;bottom:12px;padding:14px 16px;border-radius:14px;background:rgba(10,10,12,.78);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center}
+footer{padding:96px 16px calc(40px + env(safe-area-inset-bottom,0px));color:var(--mute);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+#up{position:fixed;z-index:50;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--glass);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);display:grid;place-items:center;opacity:0;transform:translateY(12px);pointer-events:none;transition:.35s}
+#up.show{opacity:1;transform:none;pointer-events:auto}
+.rv{opacity:0;transform:translateY(28px);transition:opacity .8s,transform 1s cubic-bezier(.2,.7,.2,1)}.rv.in{opacity:1;transform:none}
+@media(min-width:900px){.wrap,section{padding-left:48px;padding-right:48px}header{padding-left:48px;padding-right:48px}.img{aspect-ratio:16/9}.st{flex-direction:row;justify-content:space-between}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="#top"><i></i>Gleam Production</a>
+  <div class="ic">
+    <button class="ib" id="th" aria-label="Toggle theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg></button>
+    <button class="ib" id="mb" aria-label="Menu"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></button>
+  </div>
+</header>
+<div id="menu"><nav><a href="#about">About</a><a href="#work">Work</a><a href="#contact">Contact</a><a href="#top">Top ↑</a></nav><span class="mono" style="color:var(--mute)">hello@aurel.studio</span></div>
+
+<main id="top">
+<div class="hero wrap">
+  <div class="hc">
+    <div class="row mono"><span>35.01°N, 135.76°E</span><span>hello@aurel.studio</span></div>
+    <div>
+      <div class="tags"><a class="tag" href="#work">MVP Launch ↗</a><a class="tag" href="#work">Product Design ↗</a><a class="tag" href="#work">Scalable Tech ↗</a><a class="tag" href="#work">Growth Strategy ↗</a><a class="tag" href="#work">UI/UX Excellence ↗</a></div>
+      <div class="trust"><div class="av"><b style="background:#e8a27a"></b><b style="background:#c4573f"></b><b style="background:#8a2e4a"></b><b style="background:#f0c9a0"></b></div>Trusted by over 15k+ customers worldwide.</div>
+    </div>
+  </div>
+  <h1 class="t">Gleam Production</h1>
+  <div class="meta mono"><span>Based in Kyoto</span><span>Since 2012</span></div>
+</div>
+
+<section id="about">
+  <div class="lab mono rv"><span>About us ↗</span><span>Menu ⊞</span></div>
+  <p class="big fill" data-f>We are a creative digital agency shaping meaningful experiences for brands that want to move.</p>
+  <div class="btns rv"><a class="btn" href="#work">View Latest Projects ↗</a><a class="btn sq" href="#contact">↳</a></div>
+  <div class="img rv" style="background:radial-gradient(60% 50% at 30% 35%,#ffd2a8,transparent 60%),linear-gradient(120deg,#c8321f,#ff8a3a 45%,#8fd08a 80%,#18281c)"><div class="bd"><i class="dot"></i><div>Available for projects<br><span style="color:var(--mute)">Now booking — Q3 2026</span></div></div></div>
+  <p class="fill" data-f style="margin-top:28px;font-size:17px;line-height:1.45">Gleam Production goes beyond aesthetics, bringing clarity through motion, flexible structure and practical tools that help you move faster without losing your identity.</p>
+  <ul class="lst">
+    <li><i>+</i><span class="fill" data-f>Strategy-first digital thinking</span></li>
+    <li><i>+</i><span class="fill" data-f>Human-centred design approach</span></li>
+    <li><i>+</i><span class="fill" data-f>Scalable and future-ready solutions</span></li>
+    <li><i>+</i><span class="fill" data-f>Long-term brand partnerships</span></li>
+  </ul>
+</section>
+
+<section id="contact">
+  <div class="fm rv" style="margin-top:0">
+    <h3>Have a project in mind? Drop us a line</h3>
+    <input id="n" placeholder="Your name *" aria-label="Name">
+    <input id="e" type="email" placeholder="Your email *" aria-label="Email">
+    <textarea id="m" rows="3" placeholder="Tell us about your project *" aria-label="Project"></textarea>
+    <button class="btn" id="sb" type="button">Send Message ↗</button>
+  </div>
+  <div class="st">
+    <div class="rv"><b data-c="4" data-s="+">0+</b><span>Years of creative practice</span></div>
+    <div class="rv"><b data-c="16" data-s="k+">0k+</b><span>Projects carefully crafted</span></div>
+    <div class="rv"><b data-c="4" data-s="k+">0k+</b><span>Brands collaborated with</span></div>
+  </div>
+  <div class="img rv" style="background:radial-gradient(40% 40% at 60% 55%,#1a0b08 0 55%,transparent 58%),linear-gradient(180deg,#8a3a10,#ff7a1a 45%,#ffb04a 70%,#3a1a0a)"><div class="bd"><i class="dot"></i><div>Featured<br><span style="color:var(--mute)">Awwwards · 2026</span></div></div></div>
+</section>
+
+<section>
+  <p class="fill big" data-f style="font-size:clamp(22px,6vw,48px)">We always provide people a complete solution upon focused need of any business.</p>
+  <div class="mqw"><div class="mq" id="mq"></div></div>
+</section>
+
+<section id="work">
+  <h2 class="big fill" data-f style="font-size:clamp(40px,12vw,120px)">Selected work</h2>
+  <div class="stack" id="stack"></div>
+</section>
+</main>
+
+<footer class="mono"><span>© 2026 Gleam Production</span><span>Instagram · Behance · LinkedIn</span></footer>
+<button id="up" aria-label="Back to top"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 15l6-6 6 6"/></svg></button>
+
+<script>
+const $=s=>document.querySelector(s),RM=matchMedia("(prefers-reduced-motion:reduce)").matches;
+/* theme */
+$("#th").onclick=()=>{const r=document.documentElement,c=r.dataset.theme||(matchMedia("(prefers-color-scheme:light)").matches?"light":"dark"),n=c==="dark"?"light":"dark";r.dataset.theme=n;try{localStorage.setItem("aurel-theme",n)}catch(e){}};
+try{const t=localStorage.getItem("aurel-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}
+/* menu */
+$("#mb").onclick=()=>document.body.classList.toggle("mo");
+document.querySelectorAll("#menu a").forEach(a=>a.onclick=()=>document.body.classList.remove("mo"));
+/* marquee */
+const logos=["Prism","Bolt","Orbit","Kiln","Fable","Lumen"];
+$("#mq").innerHTML=[...logos,...logos].map(l=>"<div>"+l+"</div>").join("");
+/* work stack */
+const pr=[["Solace","linear-gradient(160deg,#ff9a5a,#b3261e 55%,#2a0a0a)"],["Ember Goods","linear-gradient(160deg,#e84a3a,#7a1414 60%,#240808)"],["Nocturne","linear-gradient(160deg,#ff6a2c,#3a1208 70%,#0c0404)"]];
+$("#stack").innerHTML=pr.map((p,i)=>`<div class="sp" style="--i:${i};z-index:${i+1}"><div class="sc" style="background:${p[1]}"><span class="fc mono">Featured case</span><div class="nm"><b>${p[0]}</b><span class="mono">View case ↗</span></div></div></div>`).join("");
+const sp=[...document.querySelectorAll(".sp")];
+/* scroll-driven bits */
+const fills=[...document.querySelectorAll("[data-f]")].map(el=>{el.innerHTML=el.textContent.trim().split(/\s+/).map(w=>"<span>"+w+"</span>").join(" ");return{el,w:[...el.children]}});
+function onScroll(){
+  const vh=innerHeight;
+  fills.forEach(f=>{const r=f.el.getBoundingClientRect(),p=Math.min(Math.max((vh*.88-r.top)/(r.height+vh*.3),0),1),k=p*f.w.length;f.w.forEach((s,i)=>s.classList.toggle("on",i<k))});
+  if(!RM)sp.forEach((el,i)=>{const nx=sp[i+1];let t=0;if(nx)t=Math.min(Math.max(1-nx.getBoundingClientRect().top/vh,0),1);const c=el.firstElementChild;c.style.transform="scale("+(1-t*.07)+") rotateX("+(t*5)+"deg)";c.style.filter="brightness("+(1-t*.45)+")"});
+  $("#up").classList.toggle("show",scrollY>700);
+}
+addEventListener("scroll",onScroll,{passive:true});onScroll();
+$("#up").onclick=()=>scrollTo({top:0});
+/* counters + reveal */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const t=e.target;t.classList.add("in");io.unobserve(t);
+  const b=t.querySelector("[data-c]");if(b){const to=+b.dataset.c,s=b.dataset.s,t0=performance.now();(function f(n){const k=Math.min((n-t0)/1400,1);b.textContent=Math.round(to*(1-Math.pow(1-k,3)))+s;if(k<1)requestAnimationFrame(f)})(t0)}}),{threshold:.2});
+document.querySelectorAll(".rv").forEach(el=>io.observe(el));
+/* form */
+$("#sb").onclick=()=>{const ok=$("#n").value.trim()&&/\S+@\S+/.test($("#e").value)&&$("#m").value.trim();$("#sb").textContent=ok?"Thanks — we’ll reply soon ✓":"Please fill all fields";if(ok)["#n","#e","#m"].forEach(s=>$(s).value="")};
+</script>
+</body>
+</html>
